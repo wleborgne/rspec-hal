@@ -18,6 +18,12 @@ describe RSpec::Hal::Matchers::HavePropertyMatcher do
   specify { expect(matcher.matches?(to_halable_w_property)).to be_truthy}
   specify { expect(matcher.matches?(to_halable_wo_property)).to be_falsey}
 
+  describe "matches _links property" do
+    subject(:matcher) { described_class.new(links_prop) }
+
+    specify { expect(matcher.matches?(json_str_w_links_property)).to be_truthy }
+    specify { expect(matcher.matches?(json_str_w_nonmatching_property)).to be_falsey }
+  end
 
   describe "value expectation set via #matching(regexp)" do
     subject(:matcher) {  described_class.new(a_prop_name).matching(/ice$/) }
@@ -114,12 +120,20 @@ describe RSpec::Hal::Matchers::HavePropertyMatcher do
       ,"hobbies": [{"name": "trumpet", "type": "music"}] }
   HAL
 
+  let(:json_str_w_links_property) { <<-HAL }
+    { "name": "Chuck"
+      ,"hobbies": [{"name": "golf","type": "sport"}]
+      ,"_links": {"self": {"href": "http://example.com/person/123"}}
+    }
+  HAL
 
   let(:parsed_json_w_property) { MultiJson.load json_str_w_property }
   let(:parsed_json_wo_property) { MultiJson.load json_str_wo_property }
+  let(:parsed_json_w_links_property) { MultiJson.load json_str_w_links_property }
 
   let(:to_halable_w_property) { halable.new json_str_w_property}
   let(:to_halable_wo_property) { halable.new json_str_wo_property }
+  let(:to_halable_w_links_property) { halable.new json_str_w_links_property }
 
   let(:halable) { Class.new do
       def initialize(json)
@@ -132,6 +146,7 @@ describe RSpec::Hal::Matchers::HavePropertyMatcher do
     end }
 
   let(:a_prop_name) { "name" }
+  let(:links_prop) { "_links" }
 
   let(:any_matcher) { matching_prop_value_matcher }
   let(:matching_prop_value_matcher) { match "Alice" }
